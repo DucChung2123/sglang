@@ -5,12 +5,12 @@ Usage:
 
 pytest python/sglang/multimodal_gen/test/server/test_server_1_gpu.py
 # for a single testcase, look for the name of the testcase in ONE_GPU_CASES,
-# ONE_GPU_CASES_C, or TWO_GPU_CASES
+# ONE_GPU_MODELOPT_CASES, or TWO_GPU_CASES
 pytest python/sglang/multimodal_gen/test/server/test_server_1_gpu.py -k qwen_image_t2i
 
 
 To add a new testcase:
-1. add your testcase with case-id: `my_new_test_case_id` to the appropriate `*_CASES_*` list
+1. add your testcase with case-id: `my_new_test_case_id` to `ONE_GPU_CASES`, `ONE_GPU_MODELOPT_CASES`, or `TWO_GPU_CASES`
 2. run `SGLANG_GEN_BASELINE=1 pytest -s python/sglang/multimodal_gen/test/server/ -k my_new_test_case_id`
 3. insert or override the corresponding scenario in `scenarios` section of perf_baselines.json with the output baseline of step-2
 
@@ -257,6 +257,7 @@ class DiffusionTestCase:
     sampling_params: DiffusionSamplingParams
     run_perf_check: bool = True
     run_consistency_check: bool = True
+    run_component_accuracy_check: bool = True
     run_models_api_check: bool = True
     run_t2v_input_reference_check: bool = True
     run_lora_basic_api_check: bool = False
@@ -431,13 +432,13 @@ HUNYUAN3D_SHAPE_sampling_params = DiffusionSamplingParams(
     image_path="https://raw.githubusercontent.com/sgl-project/sgl-test-files/main/diffusion-ci/consistency_gt/1-gpu/hunyuan3d_2_0/hunyuan3d.png",
 )
 
-MODELOPT_FLUX1_FP8_TRANSFORMER = "BBuf/flux1-dev-modelopt-fp8-sglang-transformer"
-MODELOPT_FLUX2_FP8_TRANSFORMER = "BBuf/flux2-dev-modelopt-fp8-sglang-transformer"
-MODELOPT_WAN22_FP8_TRANSFORMER = "BBuf/wan22-t2v-a14b-modelopt-fp8-sglang-transformer"
-MODELOPT_FLUX1_NVFP4_TRANSFORMER = "BBuf/flux1-dev-modelopt-nvfp4-sglang-transformer"
+MODELOPT_FLUX1_FP8_TRANSFORMER = "lmsys/flux1-dev-modelopt-fp8-sglang-transformer"
+MODELOPT_FLUX2_FP8_TRANSFORMER = "lmsys/flux2-dev-modelopt-fp8-sglang-transformer"
+MODELOPT_WAN22_FP8_TRANSFORMER = "lmsys/wan22-t2v-a14b-modelopt-fp8-sglang-transformer"
+MODELOPT_FLUX1_NVFP4_TRANSFORMER = "lmsys/flux1-dev-modelopt-nvfp4-sglang-transformer"
 MODELOPT_FLUX2_NVFP4_WEIGHTS = "black-forest-labs/FLUX.2-dev-NVFP4"
 MODELOPT_WAN22_NVFP4_TRANSFORMER = (
-    "BBuf/wan22-t2v-a14b-modelopt-nvfp4-sglang-transformer"
+    "lmsys/wan22-t2v-a14b-modelopt-nvfp4-sglang-transformer"
 )
 MODELOPT_NVFP4_B200_ENV_VARS = {"SGLANG_DIFFUSION_FLASHINFER_FP4_GEMM_BACKEND": "cudnn"}
 
@@ -463,6 +464,7 @@ def _make_modelopt_ci_case(
         sampling_params,
         run_perf_check=False,
         run_consistency_check=False,
+        run_component_accuracy_check=False,
     )
 
 
