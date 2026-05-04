@@ -43,6 +43,7 @@ fi
 # Ubuntu 24.04 ships Python 3.12 in main, so we no longer need the deadsnakes
 # PPA. Dropping it avoids transient Launchpad 504s in `add-apt-repository`.
 RUN --mount=type=cache,target=/var/cache/apt,id=base-apt \
+    echo 'Acquire::ForceIPv4 "true";' > /etc/apt/apt.conf.d/99force-ipv4 && \
     apt update && apt install -y --no-install-recommends wget software-properties-common \
     && apt install -y --no-install-recommends python3.12-full python3.12-dev \
     && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 2 \
@@ -684,6 +685,7 @@ ENV PATH="${PATH}:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/cuda/nvvm
 # Install runtime dependencies (devel base provides gcc/g++/build tools)
 # Python 3.12 ships in Ubuntu 24.04 main, so no deadsnakes PPA needed.
 RUN --mount=type=cache,target=/var/cache/apt,id=runtime-apt \
+    echo 'Acquire::ForceIPv4 "true";' > /etc/apt/apt.conf.d/99force-ipv4 && \
     apt-get update && apt-get install -y --no-install-recommends --allow-change-held-packages \
     # Python runtime
     python3.12-full \
@@ -800,4 +802,4 @@ LABEL org.opencontainers.image.source="https://github.com/sgl-project/sglang" \
       ai.sglang.image.tag="${SGLANG_IMAGE_TAG}"
 
 # Default command
-CMD ["/bin/bash"]
+CMD ["/bin/bash"]docke

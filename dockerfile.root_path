@@ -1,0 +1,57 @@
+FROM lmsysorg/sglang:deepseek-v4-hopper
+
+
+RUN python3 - <<'EOF'
+import os, sys, glob
+
+
+# Broad search for all instances of http_server.py in sglang package
+search_dirs = ["/workspace", "/usr/local", "/python-install", "/sgl-workspace"]
+paths = []
+for d in search_dirs:
+    if os.path.exists(d):
+        for root, dirs, files in os.walk(d):
+            for file in files:
+                if file == "http_server.py" and "sglang/srt/entrypoints" in root:
+                    paths.append(os.path.normpath(os.path.join(root, file)))
+
+# Remove duplicates
+paths = list(set(paths))
+
+if not paths:
+    print("ERROR: Could not find any http_server.py in sglang package")
+    sys.exit(1)
+
+import re
+# Use regex to match the pattern, being flexible with whitespace/newlines
+pattern = r'app = FastAPI\(\s*lifespan=lifespan,\s*openapi_url=None if get_bool_env_var\("DISABLE_OPENAPI_DOC"\) else "/openapi.json",?\s*\)'
+replacement = 'app = FastAPI(\n    lifespan=lifespan,\n    openapi_url=None if get_bool_env_var("DISABLE_OPENAPI_DOC") else "/openapi.json",\n    root_path=os.getenv("SGLANG_ROOT_PATH", ""),\n)'
+
+for path in paths:
+    print(f"Checking: {path}")
+    with open(path, "r") as f:
+        content = f.read()
+
+    if re.search(pattern, content):
+        print(f"Patching: {path}")
+        new_content = re.sub(pattern, replacement, content)
+        with open(path, "w") as f:
+            f.write(new_content)
+    else:
+        print(f"Pattern not found in {path}, skipping.")
+        # Diagnostic for the first file if it fails
+        if path == paths[0]:
+            match = re.search(r'app = FastAPI\(', content)
+            if match:
+                start = max(0, match.start() - 100)
+                end = min(len(content), match.end() + 200)
+                print("Found 'app = FastAPI(' but the full pattern didn't match. Context:")
+                print("---")
+                print(content[start:end])
+                print("---")
+
+print("Finished processing all found files.")
+
+
+print("Done.")
+EOF
